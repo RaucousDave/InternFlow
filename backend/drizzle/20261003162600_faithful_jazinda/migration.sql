@@ -1,0 +1,1 @@
+ALTER TABLE "logbook" RENAME COLUMN "entryStatus" TO "entry_status";

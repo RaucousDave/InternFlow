@@ -1,0 +1,1 @@
+ALTER TABLE "logbook" ALTER COLUMN "entry_status" SET DATA TYPE "entry_status" USING "entry_status"::"entry_status";
