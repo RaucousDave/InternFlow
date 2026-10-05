@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* InternFlow tokens — "university registry, digitized".
+ * Swiss Modernism grid + academic serif display + institutional navy.
+ * One accent (amber seals), one success (registrar green). Borders-only depth. */
+@theme {
+  --color-paper: #faf8f3;
+  --color-card: #ffffff;
+  --color-ink: #1b2a41;
+  --color-ink-soft: #3d4e68;
+  --color-ink-mute: #64748b;
+  --color-navy: #1e3a5f;
+  --color-navy-deep: #152a45;
+  --color-seal-amber: #a16207;
+  --color-seal-amberbg: #fdf3e3;
+  --color-seal-green: #1f6b4d;
+  --color-seal-greenbg: #e7f2ec;
+  --color-seal-slate: #475569;
+  --color-seal-slatebg: #eef2f6;
+  --color-ledger: #e3e0d6;
+  --color-form-error: #b91c1c;
+  --font-display: "EB Garamond", Georgia, serif;
+  --font-sans: Satoshi, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
+
+/* Dark ledger: same hue family, lightness inverted, semantics desaturated. */
+.dark {
+  --color-paper: #10151d;
+  --color-card: #18202c;
+  --color-ink: #ece7db;
+  --color-ink-soft: #b6b3a8;
+  --color-ink-mute: #8b93a1;
+  --color-navy: #3a6bab;
+  --color-navy-deep: #2c5386;
+  --color-seal-amber: #d9a441;
+  --color-seal-amberbg: rgb(217 164 65 / 0.14);
+  --color-seal-green: #4caf82;
+  --color-seal-greenbg: rgb(76 175 130 / 0.14);
+  --color-seal-slate: #9aa7b8;
+  --color-seal-slatebg: rgb(154 167 184 / 0.14);
+  --color-ledger: rgb(255 255 255 / 0.1);
+  --color-form-error: #ef9a9a;
+  color-scheme: dark;
+}
+
+/* ---- Base: registry paper, ink text, quiet structure ---- */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-paper font-sans text-ink;
+  }
+  h1,
+  h2 {
+    @apply font-display text-balance;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-navy ring-offset-2 ring-offset-paper;
+  }
+  ::selection {
+    background: #1e3a5f;
+    color: #fff;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Base seal primitive (v4 utility so variants can @apply it) */
+@utility seal {
+  display: inline-block;
+  border-radius: var(--radius-sm);
+  border-width: 1px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+@layer components {
+  /* Ledger surface: paper card, hairline rule, no shadow lift */
+  .ledger {
+    @apply rounded-md border border-ledger bg-card;
+  }
+  /* Status seals: bordered micro-labels, uppercase, letterspaced */
+  .seal-draft {
+    @apply seal border-seal-slate/40 bg-seal-slatebg text-seal-slate;
+  }
+  .seal-submitted {
+    @apply seal border-seal-amber/50 bg-seal-amberbg text-seal-amber;
+  }
+  .seal-reviewed {
+    @apply seal border-seal-green/50 bg-seal-greenbg text-seal-green;
+  }
+  /* Form controls: inset, dedicated tokens */
+  .field {
+    @apply w-full rounded-md border border-ledger bg-paper px-3 py-2 text-ink placeholder:text-ink-mute focus:border-navy;
+  }
+  .btn-primary {
+    @apply rounded-md bg-navy px-4 py-2 font-medium text-white transition-colors duration-150 hover:bg-navy-deep active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-quiet {
+    @apply rounded-md border border-ledger bg-card px-4 py-2 font-medium text-ink transition-colors duration-150 hover:border-ink-mute active:scale-[0.98];
+  }
+  .btn-danger-approve {
+    @apply rounded-md bg-seal-green px-4 py-2 font-medium text-white transition-colors duration-150 hover:brightness-95 active:scale-[0.98];
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .form-error {
+    color: var(--color-form-error);
+  }
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-navy focus:px-4 focus:py-2 focus:text-white;
+  }
+}
