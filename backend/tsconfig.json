@@ -8,7 +8,6 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "src",
     "types": ["bun", "node"]
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"]

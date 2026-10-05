@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 describe("BE-1 foundation: DB schema + auth + config", () => {
   test("schema defines all required tables", async () => {
-    const schema = await import("../src/db/schema.ts");
+    const schema: any = await import("../src/db/schema.ts");
     for (const t of ["user", "session", "account", "verification", "students", "supervisors", "placements", "logbookEntries", "feedback"]) {
       expect(schema[t], `missing table export: ${t}`).toBeDefined();
     }
