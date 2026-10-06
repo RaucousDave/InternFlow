@@ -23,9 +23,7 @@
           Edit this record
         </button>
       </div>
-      <h2 class="mb-3 mt-8 font-display text-2xl font-semibold">
-        {{ editingId ? "Edit placement" : "File a placement" }}
-      </h2>
+      <h2 class="mb-3 mt-8 font-display text-2xl font-semibold">File a placement</h2>
       <form
         class="ledger flex flex-col gap-4 p-6"
         novalidate
@@ -134,24 +132,66 @@
         </p>
         <div class="flex gap-3">
           <button class="btn-primary" :disabled="busy">
-            {{ busy ? "Saving…" : editingId ? "Update record" : "File record" }}
-          </button>
-          <button
-            v-if="editingId"
-            type="button"
-            class="btn-quiet"
-            @click="reset"
-          >
-            Cancel
+            {{ busy ? "Saving…" : "File record" }}
           </button>
         </div>
       </form>
     </template>
+    <div
+      v-if="editing"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog" aria-modal="true" aria-label="Edit placement"
+    >
+      <div class="absolute inset-0 bg-black/60" @click="closeEdit"></div>
+      <div class="ledger relative max-h-[90vh] w-full max-w-2xl overflow-y-auto p-6">
+        <h2 class="mb-1 font-display text-2xl font-semibold">Edit placement</h2>
+        <p class="mb-4 text-sm text-ink-mute">Changes save to this record only.</p>
+        <form class="flex flex-col gap-4" novalidate @submit.prevent="onUpdate">
+          <div>
+            <label for="epl-org" class="mb-1 block text-sm font-medium">Organization / company name</label>
+            <input id="epl-org" v-model="editForm.orgName" type="text" required autocomplete="organization" class="field" />
+          </div>
+          <div>
+            <label for="epl-addr" class="mb-1 block text-sm font-medium">Organization address</label>
+            <input id="epl-addr" v-model="editForm.orgAddress" type="text" required autocomplete="off" class="field" />
+          </div>
+          <div>
+            <label for="epl-role" class="mb-1 block text-sm font-medium">Position / role</label>
+            <input id="epl-role" v-model="editForm.position" type="text" required autocomplete="off" class="field" />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="epl-start" class="mb-1 block text-sm font-medium">Start date</label>
+              <input id="epl-start" v-model="editForm.startDate" type="date" required class="field" />
+            </div>
+            <div>
+              <label for="epl-end" class="mb-1 block text-sm font-medium">End date</label>
+              <input id="epl-end" v-model="editForm.endDate" type="date" required class="field" />
+            </div>
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="epl-sup" class="mb-1 block text-sm font-medium">Industry supervisor name</label>
+              <input id="epl-sup" v-model="editForm.industrySupervisorName" type="text" required autocomplete="off" class="field" />
+            </div>
+            <div>
+              <label for="epl-supc" class="mb-1 block text-sm font-medium">Industry supervisor contact</label>
+              <input id="epl-supc" v-model="editForm.industrySupervisorContact" type="text" required autocomplete="off" class="field" />
+            </div>
+          </div>
+          <p v-if="editMsg" role="status" class="text-sm form-error">{{ editMsg }}</p>
+          <div class="flex gap-3">
+            <button class="btn-primary" :disabled="editBusy">{{ editBusy ? "Saving…" : "Update record" }}</button>
+            <button type="button" class="btn-quiet" @click="closeEdit">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
 import BackButton from "../components/BackButton.vue";
 import {
   createPlacement,
@@ -166,7 +206,9 @@ const loading = ref(true);
 const busy = ref(false);
 const msg = ref("");
 const ok = ref(false);
-const editingId = ref<string | null>(null);
+const editing = ref<Placement | null>(null);
+const editBusy = ref(false);
+const editMsg = ref("");
 const placements = ref<Placement[]>([]);
 const blank = () => ({
   orgName: "",
@@ -178,6 +220,7 @@ const blank = () => ({
   industrySupervisorContact: "",
 });
 const form = reactive(blank());
+const editForm = reactive(blank());
 
 async function load() {
   try {
@@ -190,17 +233,27 @@ async function load() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  load();
+  window.addEventListener("keydown", onKey);
+});
+onUnmounted(() => window.removeEventListener("keydown", onKey));
 
-function edit(pl: Placement) {
-  editingId.value = pl.id ?? null;
-  Object.assign(form, { ...blank(), ...pl });
-  document.getElementById("pl-org")?.focus();
+function onKey(e: KeyboardEvent) {
+  if (e.key === "Escape" && editing.value) closeEdit();
 }
 
-function reset() {
-  editingId.value = null;
-  Object.assign(form, blank());
+function edit(pl: Placement) {
+  editing.value = pl;
+  editMsg.value = "";
+  Object.assign(editForm, { ...blank(), ...pl });
+  nextTick(() => document.getElementById("epl-org")?.focus());
+}
+
+function closeEdit() {
+  editing.value = null;
+  Object.assign(editForm, blank());
+  editMsg.value = "";
 }
 
 async function onSave() {
@@ -208,16 +261,30 @@ async function onSave() {
   ok.value = false;
   busy.value = true;
   try {
-    if (editingId.value) await updatePlacement(editingId.value, { ...form });
-    else await createPlacement({ ...form });
+    await createPlacement({ ...form });
     ok.value = true;
-    msg.value = editingId.value ? "Record updated." : "Placement filed.";
-    reset();
+    msg.value = "Placement filed.";
+    Object.assign(form, blank());
     await load();
   } catch (e: unknown) {
     msg.value = errMsg(e);
   } finally {
     busy.value = false;
+  }
+}
+
+async function onUpdate() {
+  if (!editing.value?.id) return;
+  editMsg.value = "";
+  editBusy.value = true;
+  try {
+    await updatePlacement(editing.value.id, { ...editForm });
+    closeEdit();
+    await load();
+  } catch (e: unknown) {
+    editMsg.value = errMsg(e);
+  } finally {
+    editBusy.value = false;
   }
 }
 </script>

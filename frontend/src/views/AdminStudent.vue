@@ -21,7 +21,7 @@
           <StatusSeal :status="e.status" />
         </div>
         <p class="mt-2 whitespace-pre-wrap text-sm">{{ e.activities }}</p>
-        <form v-if="e.status !== 'DRAFT'" class="mt-3 flex gap-2" @submit.prevent="sendFeedback(e.id!, fb[e.id!] ?? '')">
+        <form v-if="canReview(e)" class="mt-3 flex gap-2" @submit.prevent="sendFeedback(e.id!, fb[e.id!] ?? '')">
           <label :for="`fb-${e.id}`" class="sr-only">Feedback for week {{ e.weekNumber }}</label>
           <input
             :id="`fb-${e.id}`" v-model="fb[e.id!]" required
@@ -30,6 +30,14 @@
           />
           <button class="btn-primary shrink-0 text-sm" :disabled="sending">Send</button>
         </form>
+        <div v-else-if="e.feedback?.length" class="mt-3">
+          <p class="text-xs font-medium uppercase tracking-wide text-ink-mute">Supervisor feedback</p>
+          <div v-for="f in e.feedback" :key="f.id ?? f.body" class="mt-1 text-sm">
+            <p class="whitespace-pre-wrap">{{ f.body }}</p>
+            <p v-if="f.createdAt" class="tabular mt-1 text-xs text-ink-mute">{{ fmtDate(f.createdAt) }}</p>
+          </div>
+        </div>
+        <p v-else-if="e.status === 'DRAFT'" class="mt-3 text-sm text-ink-mute">Not submitted yet — feedback opens after the student submits.</p>
       </div>
       <p v-if="msg" role="status" class="text-sm" :class="ok ? 'text-seal-green' : 'form-error'">{{ msg }}</p>
       <div class="ledger mt-6 p-5">
@@ -49,6 +57,7 @@ import BackButton from '../components/BackButton.vue'
 import StatusSeal from '../components/StatusSeal.vue'
 import {
   errMsg,
+  fmtDate,
   getStudent,
   getStudentLogbook,
   giveFeedback,
@@ -80,6 +89,10 @@ onMounted(async () => {
   }
 })
 
+function canReview(e: LogbookEntry) {
+  return e.status === 'SUBMITTED' && !(e.feedback?.length)
+}
+
 async function sendFeedback(logbookId: string, body: string) {
   msg.value = ''
   ok.value = false
@@ -87,6 +100,14 @@ async function sendFeedback(logbookId: string, body: string) {
   try {
     await giveFeedback(logbookId, body)
     fb[logbookId] = ''
+    const entry = entries.value.find((x) => x.id === logbookId)
+    if (entry) {
+      entry.status = 'REVIEWED'
+      entry.feedback = [
+        ...(entry.feedback ?? []),
+        { logbookEntryId: logbookId, body: body.trim(), createdAt: new Date().toISOString() },
+      ]
+    }
     ok.value = true
     msg.value = 'Feedback recorded.'
   } catch (e: unknown) {

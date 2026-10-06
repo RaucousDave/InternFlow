@@ -58,6 +58,23 @@ describe("BE-3 student routes: profile, placement, logbook, feedback", () => {
     expect(schemaSrc).toContain("one_entry_per_week");
   });
 
+  test("week sequencing: file next week or back-fill gaps, never skip ahead", async () => {
+    const { maxFileableWeek } = await import("../src/routes/student.ts");
+    expect(maxFileableWeek([])).toBe(1);
+    expect(maxFileableWeek([1])).toBe(2);
+    expect(maxFileableWeek([1, 2, 3])).toBe(4);
+    expect(maxFileableWeek([1, 3])).toBe(4); // gaps back-fill, cap still max + 1
+    expect(maxFileableWeek([0, -2, 2.5])).toBe(1); // junk ignored
+  });
+
+  test("POST /logbook rejects future weeks and future dates", () => {
+    const s = src();
+    expect(s).toContain("WEEK_NOT_STARTED");
+    expect(s).toContain("FUTURE_DATES");
+    expect(s).toContain("maxFileableWeek");
+    expect(s).toContain("422");
+  });
+
   test("student feedback read joins own entries only", async () => {
     const s = src();
     expect(s).toContain("'/feedback'");

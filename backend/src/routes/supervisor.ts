@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 import { Router, type NextFunction, type Request, type Response } from 'express'
 import { db } from '../db/client.js'
 import { feedback, logbookEntries, placements, students, supervisors, user as authUsers } from '../db/schema.js'
@@ -62,9 +62,14 @@ supervisorRouter.get('/supervisor/students/:id/logbook', async (req, res) => {
   const id = idParam(req.params.id)
   if (id === null) return fail(res, 400, 'Invalid student id.', 'INVALID_ID')
   if (!(await getStudent(id))) return fail(res, 404, 'Student not found.', 'NOT_FOUND')
-  res.json(
-    await db.select().from(logbookEntries).where(eq(logbookEntries.studentId, id)).orderBy(logbookEntries.weekNumber)
-  )
+  const rows = await db.select().from(logbookEntries).where(eq(logbookEntries.studentId, id)).orderBy(logbookEntries.weekNumber)
+  if (!rows.length) return res.json([])
+  // Attach recorded feedback so the UI can hide the input once an entry is reviewed.
+  const fb = await db
+    .select()
+    .from(feedback)
+    .where(inArray(feedback.logbookEntryId, rows.map((r) => r.id)))
+  res.json(rows.map((r) => ({ ...r, feedback: fb.filter((f) => f.logbookEntryId === r.id) })))
 })
 
 supervisorRouter.post('/supervisor/logbook/:id/feedback', async (req, res) => {
@@ -76,6 +81,8 @@ supervisorRouter.post('/supervisor/logbook/:id/feedback', async (req, res) => {
   const entry = rows[0]
   if (!entry) return fail(res, 404, 'Logbook entry not found.', 'NOT_FOUND')
   if (entry.status === 'DRAFT') return fail(res, 422, 'Only submitted entries can be reviewed.', 'NOT_SUBMITTED')
+  const already = await db.select({ id: feedback.id }).from(feedback).where(eq(feedback.logbookEntryId, id)).limit(1)
+  if (already[0]) return fail(res, 409, 'Feedback already recorded for this entry.', 'FEEDBACK_ALREADY_GIVEN')
   const supervisorId = me(req).supervisorId as string
   const ins = await db.insert(feedback).values({ logbookEntryId: id, supervisorId, body: body.trim() }).returning()
   await db.update(logbookEntries).set({ status: 'REVIEWED' }).where(eq(logbookEntries.id, id))

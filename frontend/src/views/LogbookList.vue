@@ -35,19 +35,20 @@
         </tbody>
       </table>
       <h2 class="mb-3 mt-8 font-display text-2xl font-semibold">File a new week</h2>
+      <p class="mb-3 text-sm text-ink-mute">Weeks open one at a time — right now you can file up to week {{ maxWeek }}.</p>
       <form class="ledger flex flex-col gap-4 p-6" novalidate @submit.prevent="onCreate">
         <div class="grid gap-4 sm:grid-cols-3">
           <div>
             <label for="lb-week" class="mb-1 block text-sm font-medium">Week number</label>
-            <input id="lb-week" v-model.number="form.weekNumber" type="number" min="1" required class="field tabular" />
+            <input id="lb-week" v-model.number="form.weekNumber" type="number" min="1" :max="maxWeek" required class="field tabular" />
           </div>
           <div>
             <label for="lb-start" class="mb-1 block text-sm font-medium">Start date</label>
-            <input id="lb-start" v-model="form.startDate" type="date" required class="field" />
+            <input id="lb-start" v-model="form.startDate" type="date" required :max="today" class="field" />
           </div>
           <div>
             <label for="lb-end" class="mb-1 block text-sm font-medium">End date</label>
-            <input id="lb-end" v-model="form.endDate" type="date" required class="field" />
+            <input id="lb-end" v-model="form.endDate" type="date" required :max="today" class="field" />
           </div>
         </div>
         <div>
@@ -70,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import BackButton from '../components/BackButton.vue'
 import EmptyState from '../components/EmptyState.vue'
 import StatusSeal from '../components/StatusSeal.vue'
@@ -83,6 +84,16 @@ const msg = ref('')
 const ok = ref(false)
 const entries = ref<LogbookEntry[]>([])
 const form = reactive({ weekNumber: 1, startDate: '', endDate: '', activities: '', challenges: '', lessons: '' })
+
+const maxWeek = computed(() =>
+  entries.value.length ? Math.max(...entries.value.map((e) => e.weekNumber)) + 1 : 1
+)
+const today = computed(() => {
+  const d = new Date()
+  const m = `${d.getMonth() + 1}`.padStart(2, '0')
+  const day = `${d.getDate()}`.padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+})
 
 async function load() {
   try {
@@ -102,6 +113,14 @@ onMounted(load)
 async function onCreate() {
   msg.value = ''
   ok.value = false
+  if (form.weekNumber > maxWeek.value) {
+    msg.value = `Week ${form.weekNumber} has not started yet. You can file up to week ${maxWeek.value}.`
+    return
+  }
+  if (form.startDate > today.value || form.endDate > today.value) {
+    msg.value = 'Logbook dates cannot be in the future.'
+    return
+  }
   busy.value = true
   try {
     await createLogbook({ ...form })

@@ -23,6 +23,21 @@ function me(req: Request) {
   return (req as AuthedRequest).user
 }
 
+// Highest week number that may be filed: the week after the latest filed
+// week (or week 1 when nothing is filed). Missed weeks may be back-filled,
+// but nobody can skip ahead into weeks that have not arrived yet.
+export function maxFileableWeek(existingWeeks: number[]): number {
+  const valid = existingWeeks.filter((n) => Number.isInteger(n) && n > 0)
+  return valid.length ? Math.max(...valid) + 1 : 1
+}
+
+function todayLocal(): string {
+  const d = new Date()
+  const m = `${d.getMonth() + 1}`.padStart(2, '0')
+  const day = `${d.getDate()}`.padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
 // ---------- profile ----------
 studentRouter.get('/students/profile', async (req, res) => {
   const u = me(req)
@@ -161,6 +176,18 @@ studentRouter.post('/logbook', async (req, res) => {
   if (!Number.isInteger(week) || week < 1) return fail(res, 400, 'Week number must be a positive integer.', 'INVALID_WEEK')
   for (const k of ['startDate', 'endDate', 'activities', 'challenges', 'lessons']) {
     if (!String(b[k] ?? '').trim()) return fail(res, 400, 'All logbook fields are required.', 'MISSING_FIELDS')
+  }
+  const prior = await db
+    .select({ weekNumber: logbookEntries.weekNumber })
+    .from(logbookEntries)
+    .where(eq(logbookEntries.studentId, sid))
+  const cap = maxFileableWeek(prior.map((r) => r.weekNumber))
+  if (week > cap) {
+    return fail(res, 422, `Week ${week} has not started yet. You can file up to week ${cap}.`, 'WEEK_NOT_STARTED', { maxWeek: cap })
+  }
+  const today = todayLocal()
+  if (String(b.startDate) > today || String(b.endDate) > today) {
+    return fail(res, 400, 'Logbook dates cannot be in the future.', 'FUTURE_DATES')
   }
   try {
     const dup = await db

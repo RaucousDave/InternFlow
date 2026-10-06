@@ -31,6 +31,18 @@ describe("BE-4 supervisor routes: review + completion gate", () => {
     expect(s).toContain("MISSING_FIELDS");
   });
 
+  test("feedback cannot be recorded twice for one entry", () => {
+    const s = src();
+    expect(s).toContain("FEEDBACK_ALREADY_GIVEN");
+    expect(s).toContain("409");
+  });
+
+  test("supervisor logbook list carries each entry's feedback", () => {
+    const s = src();
+    expect(s).toContain("inArray");
+    expect(s).toContain("feedback: fb.filter");
+  });
+
   test("completion gate checks profile + placement + reviewed weeks", () => {
     const s = src();
     expect(s).toContain("'/supervisor/students/:id/complete'");

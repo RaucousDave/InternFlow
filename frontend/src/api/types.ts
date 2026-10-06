@@ -39,6 +39,7 @@ export interface LogbookEntry {
   challenges: string;
   lessons: string;
   status: LogbookStatus;
+  feedback?: FeedbackItem[];
 }
 
 export interface FeedbackItem {
