@@ -75,6 +75,12 @@ describe("BE-3 student routes: profile, placement, logbook, feedback", () => {
     expect(s).toContain("422");
   });
 
+  test("PUT /logbook/:id also rejects future dates on drafts", () => {
+    const s = src();
+    // the guard must appear in both the create and the draft-edit paths
+    expect((s.match(/FUTURE_DATES/g) ?? []).length).toBeGreaterThanOrEqual(2);
+  });
+
   test("student feedback read joins own entries only", async () => {
     const s = src();
     expect(s).toContain("'/feedback'");

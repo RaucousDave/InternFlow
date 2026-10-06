@@ -28,6 +28,7 @@
               v-model="entry.startDate"
               type="date"
               required
+              :max="today"
               class="field"
             />
           </div>
@@ -40,6 +41,7 @@
               v-model="entry.endDate"
               type="date"
               required
+              :max="today"
               class="field"
             />
           </div>
@@ -171,6 +173,12 @@ const ok = ref(false);
 const entry = ref<LogbookEntry | null>(null);
 const thread = ref<FeedbackItem[]>([]);
 const editable = computed(() => entry.value?.status === "DRAFT");
+const today = computed(() => {
+  const d = new Date();
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+});
 
 onMounted(async () => {
   try {
@@ -192,6 +200,10 @@ async function onSave() {
   if (!entry.value?.id) return;
   msg.value = "";
   ok.value = false;
+  if (entry.value.startDate > today.value || entry.value.endDate > today.value) {
+    msg.value = "Logbook dates cannot be in the future.";
+    return;
+  }
   busy.value = true;
   try {
     await updateLogbook(entry.value.id, { ...entry.value });

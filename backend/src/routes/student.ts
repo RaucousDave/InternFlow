@@ -257,6 +257,11 @@ studentRouter.put('/logbook/:id', async (req, res) => {
   for (const k of ['startDate', 'endDate', 'activities', 'challenges', 'lessons']) {
     if (typeof b[k] === 'string' && (b[k] as string).trim()) patch[k] = (b[k] as string).trim()
   }
+  const start = patch.startDate ?? String(e.startDate)
+  const end = patch.endDate ?? String(e.endDate)
+  if (start > todayLocal() || end > todayLocal()) {
+    return fail(res, 400, 'Logbook dates cannot be in the future.', 'FUTURE_DATES')
+  }
   const upd = await db.update(logbookEntries).set(patch).where(eq(logbookEntries.id, id)).returning()
   res.json(upd[0])
 })
