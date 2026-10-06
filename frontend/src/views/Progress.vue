@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-2xl">
+    <BackButton />
     <h1 class="font-display text-3xl font-semibold">Sign-off sheet</h1>
     <p class="mb-6 mt-1 text-ink-mute">Everything required before your SIWES can be marked complete.</p>
     <p v-if="loading" class="text-ink-mute">Loading…</p>
@@ -31,6 +32,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import BackButton from '../components/BackButton.vue'
 import { errMsg, getProfile, listLogbook, listPlacements } from '../api/client'
 
 interface Check {

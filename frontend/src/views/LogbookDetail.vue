@@ -1,8 +1,6 @@
 <template>
   <div class="mx-auto max-w-2xl">
-    <RouterLink to="/logbook" class="text-sm font-medium text-navy underline"
-      >← Back to the ledger</RouterLink
-    >
+    <BackButton fallback="/logbook" label="Back to the ledger" />
     <div class="mb-6 mt-2 flex flex-wrap items-center gap-3">
       <h1 class="tabular font-display text-3xl font-semibold">
         Week {{ entry?.weekNumber }}
@@ -150,6 +148,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
+import BackButton from "../components/BackButton.vue";
 import StatusSeal from "../components/StatusSeal.vue";
 import {
   errMsg,

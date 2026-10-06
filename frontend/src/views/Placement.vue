@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-2xl">
+    <BackButton />
     <h1 class="font-display text-3xl font-semibold">Placement</h1>
     <p class="mb-6 mt-1 text-ink-mute">
       Where you served, and who supervised you there.
@@ -151,6 +152,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
+import BackButton from "../components/BackButton.vue";
 import {
   createPlacement,
   errMsg,

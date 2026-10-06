@@ -1,6 +1,6 @@
 <template>
   <div class="mx-auto max-w-3xl">
-    <RouterLink to="/admin" class="text-sm font-medium text-navy underline">← Back to the register</RouterLink>
+    <BackButton fallback="/admin" label="Back to the register" />
     <h1 class="mb-6 mt-2 font-display text-3xl font-semibold">Student record</h1>
     <p v-if="loading" class="text-ink-mute">Loading…</p>
     <p v-else-if="error" role="alert" class="text-sm form-error">{{ error }}</p>
@@ -45,6 +45,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import EmptyState from '../components/EmptyState.vue'
+import BackButton from '../components/BackButton.vue'
 import StatusSeal from '../components/StatusSeal.vue'
 import {
   errMsg,

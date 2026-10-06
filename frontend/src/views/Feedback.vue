@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-2xl">
+    <BackButton />
     <h1 class="font-display text-3xl font-semibold">Supervisor notes</h1>
     <p class="mb-6 mt-1 text-ink-mute">What your supervisor wrote on your reviewed weeks.</p>
     <p v-if="loading" class="text-ink-mute">Loading…</p>
@@ -19,6 +20,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import BackButton from '../components/BackButton.vue'
 import EmptyState from '../components/EmptyState.vue'
 import { errMsg, listFeedback, type FeedbackItem } from '../api/client'
 

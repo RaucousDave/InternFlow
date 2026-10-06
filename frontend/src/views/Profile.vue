@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-lg">
+    <BackButton />
     <h1 class="font-display text-3xl font-semibold">Student profile</h1>
     <p class="mb-6 mt-1 text-ink-mute">These details identify you to your supervisor. Keep them current.</p>
     <p v-if="loading" class="text-ink-mute">Loading…</p>
@@ -34,6 +35,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import BackButton from '../components/BackButton.vue'
 import { errMsg, getProfile, updateProfile } from '../api/client'
 
 const loading = ref(true)

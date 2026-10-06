@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-3xl">
+    <BackButton />
     <h1 class="font-display text-3xl font-semibold">Weekly logbook</h1>
     <p class="mb-6 mt-1 text-ink-mute">One entry per week. Submitted weeks lock and cannot be edited.</p>
     <p v-if="loading" class="text-ink-mute">Loading…</p>
@@ -70,6 +71,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import BackButton from '../components/BackButton.vue'
 import EmptyState from '../components/EmptyState.vue'
 import StatusSeal from '../components/StatusSeal.vue'
 import { createLogbook, errMsg, fmtDate, listLogbook, type LogbookEntry } from '../api/client'
