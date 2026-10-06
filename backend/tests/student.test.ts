@@ -81,6 +81,24 @@ describe("BE-3 student routes: profile, placement, logbook, feedback", () => {
     expect((s.match(/FUTURE_DATES/g) ?? []).length).toBeGreaterThanOrEqual(2);
   });
 
+  test("cannot start a new week while the latest week is still a draft", () => {
+    const s = src();
+    expect(s).toContain("DRAFT_WEEK_OPEN");
+    // pure replica of the rule — no DB needed
+    const blocked = (prior: { week: number; status: string }[], week: number) => {
+      const latest = prior.reduce<{ week: number; status: string } | null>(
+        (a, b) => (b.week > (a?.week ?? 0) ? b : a),
+        null
+      );
+      return !!latest && latest.status === "DRAFT" && week > latest.week;
+    };
+    expect(blocked([], 1)).toBe(false);
+    expect(blocked([{ week: 1, status: "SUBMITTED" }], 2)).toBe(false);
+    expect(blocked([{ week: 1, status: "DRAFT" }], 2)).toBe(true);
+    expect(blocked([{ week: 1, status: "SUBMITTED" }, { week: 3, status: "DRAFT" }], 2)).toBe(false); // back-fill allowed
+    expect(blocked([{ week: 1, status: "REVIEWED" }], 2)).toBe(false);
+  });
+
   test("student feedback read joins own entries only", async () => {
     const s = src();
     expect(s).toContain("'/feedback'");

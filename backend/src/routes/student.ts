@@ -178,12 +178,19 @@ studentRouter.post('/logbook', async (req, res) => {
     if (!String(b[k] ?? '').trim()) return fail(res, 400, 'All logbook fields are required.', 'MISSING_FIELDS')
   }
   const prior = await db
-    .select({ weekNumber: logbookEntries.weekNumber })
+    .select({ weekNumber: logbookEntries.weekNumber, status: logbookEntries.status })
     .from(logbookEntries)
     .where(eq(logbookEntries.studentId, sid))
   const cap = maxFileableWeek(prior.map((r) => r.weekNumber))
   if (week > cap) {
     return fail(res, 422, `Week ${week} has not started yet. You can file up to week ${cap}.`, 'WEEK_NOT_STARTED', { maxWeek: cap })
+  }
+  const latest = prior.reduce<(typeof prior)[number] | null>(
+    (a, b) => (b.weekNumber > (a?.weekNumber ?? 0) ? b : a),
+    null
+  )
+  if (latest && latest.status === 'DRAFT' && week > latest.weekNumber) {
+    return fail(res, 422, `Week ${latest.weekNumber} is still a draft. Submit it before filing week ${week}.`, 'DRAFT_WEEK_OPEN', { currentWeek: latest.weekNumber })
   }
   const today = todayLocal()
   if (String(b.startDate) > today || String(b.endDate) > today) {

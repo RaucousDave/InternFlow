@@ -34,6 +34,7 @@
           </tr>
         </tbody>
       </table>
+      <template v-if="canFileNew">
       <h2 class="mb-3 mt-8 font-display text-2xl font-semibold">File a new week</h2>
       <p class="mb-3 text-sm text-ink-mute">Weeks open one at a time — right now you can file up to week {{ maxWeek }}.</p>
       <form class="ledger flex flex-col gap-4 p-6" novalidate @submit.prevent="onCreate">
@@ -66,6 +67,12 @@
         <p v-if="msg" role="status" class="text-sm" :class="ok ? 'text-seal-green' : 'form-error'">{{ msg }}</p>
         <button class="btn-primary self-start" :disabled="busy">{{ busy ? 'Filing…' : 'File as draft' }}</button>
       </form>
+      </template>
+      <div v-else-if="latestEntry" class="ledger mt-8 p-5">
+        <p class="font-semibold">Week {{ latestEntry.weekNumber }} is still a draft.</p>
+        <p class="mt-1 text-sm text-ink-mute">Finish and submit it before a new week opens.</p>
+        <RouterLink :to="`/logbook/${latestEntry.id}`" class="mt-3 inline-block font-medium text-navy underline">Continue writing week {{ latestEntry.weekNumber }}</RouterLink>
+      </div>
     </template>
   </div>
 </template>
@@ -88,6 +95,10 @@ const form = reactive({ weekNumber: 1, startDate: '', endDate: '', activities: '
 const maxWeek = computed(() =>
   entries.value.length ? Math.max(...entries.value.map((e) => e.weekNumber)) + 1 : 1
 )
+const latestEntry = computed(() =>
+  entries.value.length ? entries.value[entries.value.length - 1] : null
+)
+const canFileNew = computed(() => !latestEntry.value || latestEntry.value.status !== 'DRAFT')
 const today = computed(() => {
   const d = new Date()
   const m = `${d.getMonth() + 1}`.padStart(2, '0')
