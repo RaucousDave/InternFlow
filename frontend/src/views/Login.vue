@@ -13,10 +13,10 @@
       </div>
       <div>
         <label for="login-password" class="mb-1 block text-sm font-medium">Password</label>
-        <input
-          id="login-password" v-model="password" name="password" type="password" required
+        <PasswordField
+          id="login-password" v-model="password" name="password"
           autocomplete="current-password" placeholder="Your password…"
-          class="field" :aria-describedby="error ? 'login-error' : undefined"
+          required :describedby="error ? 'login-error' : undefined"
         />
       </div>
       <p v-if="error" id="login-error" role="alert" class="text-sm form-error">{{ error }}</p>
@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import PasswordField from '../components/PasswordField.vue'
 import { getRole, login } from '../api/client'
 
 const router = useRouter()
