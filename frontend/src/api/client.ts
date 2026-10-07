@@ -9,7 +9,7 @@ import type {
 
 export type { FeedbackItem, LogbookEntry, Placement, StudentProfile };
 
-export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "https://internflow-xqp3.onrender.com";
 
 // better-auth owns sign-up / sign-in / sign-out / session (cookie-based).
 export const authClient = createAuthClient({
