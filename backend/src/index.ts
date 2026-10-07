@@ -10,10 +10,14 @@ import { supervisorRouter } from "./routes/supervisor.js";
 // TODO (backend owner): wire routers + error handler.
 // Suggested order (PRD §18): profile/placement/logbook → supervisor.
 
+const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://intern-flow-lime.vercel.app";
+const allowedOrigins = [FRONTEND_URL, "http://localhost:5173"];
 const app = express();
+// Render/Vercel sit behind a proxy — required so Secure cookies work over HTTPS.
+app.set("trust proxy", 1);
 app.use(
   cors({
-    origin: "https://intern-flow-lime.vercel.app" ?? "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
