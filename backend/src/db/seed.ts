@@ -1,8 +1,10 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { eq } from "drizzle-orm";
 import { auth } from "../auth.js";
 import { db } from "./client.js";
 import { supervisors, user } from "./schema.js";
+
+dotenv.config();
 
 // Department supervisor bootstrap. Run with: bun run db:seed
 // Credentials come from the environment so no real password lives in git:

@@ -7,7 +7,7 @@ import { db } from "./db/client.ts";
 // a signup field — only seed/server code may set SUPERVISOR.
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:8000",
-  trustedOrigins: [process.env.FRONTEND_URL ?? "http://localhost:5173"],
+  trustedOrigins: ["https://intern-flow-lime.vercel.app"],
   database: drizzleAdapter(db, { provider: "pg" }),
   emailAndPassword: { enabled: true, minPasswordLength: 8 },
   session: { expiresIn: 60 * 60 * 24 * 7 }, // 7 days
